@@ -1,0 +1,252 @@
+- =====================================================
+-- DATA DIGGER: E-Commerce Store SQL Project
+-- Complete SQL Implementation with CRUD Operations
+-- =====================================================
+
+-- Drop existing tables if they exist (for clean restart)
+DROP TABLE IF EXISTS OrderDetails;
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Customers;
+
+-- =====================================================
+-- TABLE 1: CUSTOMERS TABLE
+-- =====================================================
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- TABLE 2: PRODUCTS TABLE
+-- =====================================================
+CREATE TABLE Products (
+    ProductID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(150) NOT NULL,
+    Price DECIMAL(10, 2) NOT NULL,
+    StockQuantity INT NOT NULL DEFAULT 0,
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- TABLE 3: ORDERS TABLE
+-- =====================================================
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY AUTO_INCREMENT,
+    CustomerID INT NOT NULL,
+    OrderDate DATE NOT NULL,
+    TotalAmount DECIMAL(12, 2) NOT NULL,
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+-- =====================================================
+-- TABLE 4: ORDERDETAILS TABLE
+-- =====================================================
+CREATE TABLE OrderDetails (
+    OrderDetailID INT PRIMARY KEY AUTO_INCREMENT,
+    OrderID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL,
+    Subtotal DECIMAL(12, 2) NOT NULL,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- =====================================================
+-- CUSTOMERS QUERIES
+-- =====================================================
+
+-- C1: INSERT sample customers into Customers table
+INSERT INTO Customers (Name, Email) VALUES
+('Alice Johnson', 'alice.johnson@email.com'),
+('Bob Smith', 'bob.smith@email.com'),
+('Charlie Brown', 'charlie.brown@email.com'),
+('Diana Prince', 'diana.prince@email.com'),
+('Eve Wilson', 'eve.wilson@email.com'),
+('Frank Castle', 'frank.castle@email.com'),
+('Grace Hopper', 'grace.hopper@email.com'),
+('Henry Ford', 'henry.ford@email.com');
+
+-- C2: RETRIEVE all customer details
+SELECT CustomerID, Name, Email, CreatedDate
+FROM Customers
+ORDER BY CustomerID;
+
+-- C3: DELETE a customer using CustomerID (Example: Delete customer with ID 8)
+-- DELETE FROM Customers WHERE CustomerID = 8;
+
+-- C4: UPDATE a customer's email address (Example: Update Alice's email)
+-- UPDATE Customers SET Email = 'alice.newemail@email.com' WHERE CustomerID = 1;
+
+-- C5: DISPLAY all customers whose name is 'Alice'
+SELECT * FROM Customers WHERE Name LIKE '%Alice%';
+
+-- =====================================================
+-- PRODUCTS QUERIES
+-- =====================================================
+
+-- P1: INSERT sample products into Products table
+INSERT INTO Products (Name, Price, StockQuantity) VALUES
+('Laptop', 1200.00, 15),
+('Wireless Mouse', 45.50, 100),
+('USB-C Cable', 15.99, 250),
+('Monitor 27-inch', 350.00, 20),
+('Mechanical Keyboard', 150.00, 45),
+('Webcam HD', 89.99, 60),
+('Headphones', 199.99, 35),
+('Desk Lamp', 55.00, 80);
+
+-- P2: RETRIEVE all products sorted by price in descending order
+SELECT ProductID, Name, Price, StockQuantity
+FROM Products
+ORDER BY Price DESC;
+
+-- P3: UPDATE the price of a specific product (Example: Update Laptop price)
+-- UPDATE Products SET Price = 1150.00 WHERE ProductID = 1;
+
+-- P4: RETRIEVE products whose price is between 500 and 1000
+SELECT ProductID, Name, Price, StockQuantity
+FROM Products
+WHERE Price BETWEEN 50 AND 200;
+
+-- P5: RETRIEVE the most expensive and cheapest product using MIN/MAX
+SELECT 
+    (SELECT Name FROM Products ORDER BY Price DESC LIMIT 1) AS MostExpensive,
+    (SELECT Price FROM Products ORDER BY Price DESC LIMIT 1) AS MaxPrice,
+    (SELECT Name FROM Products ORDER BY Price ASC LIMIT 1) AS CheapestProduct,
+    (SELECT Price FROM Products ORDER BY Price ASC LIMIT 1) AS MinPrice;
+
+-- =====================================================
+-- ORDERS QUERIES
+-- =====================================================
+
+-- O1: INSERT sample orders into Orders table
+INSERT INTO Orders (CustomerID, OrderDate, TotalAmount) VALUES
+(1, '2024-01-15', 1245.99),
+(2, '2024-01-18', 389.50),
+(3, '2024-02-05', 560.00),
+(1, '2024-02-20', 150.00),
+(4, '2024-03-10', 2100.50),
+(5, '2024-03-15', 89.99),
+(2, '2024-03-25', 890.00),
+(6, '2024-04-05', 1450.99),
+(3, '2024-04-12', 345.75),
+(7, '2024-04-20', 120.50);
+
+-- O2: RETRIEVE all orders made by a specific customer (Example: Customer ID 1)
+SELECT OrderID, CustomerID, OrderDate, TotalAmount
+FROM Orders
+WHERE CustomerID = 1
+ORDER BY OrderDate DESC;
+
+-- O3: UPDATE an order's total amount (Example: Update order 1)
+-- UPDATE Orders SET TotalAmount = 1300.00 WHERE OrderID = 1;
+
+-- O4: RETRIEVE orders placed in the last 30 days (assuming current date is 2024-04-25)
+SELECT OrderID, CustomerID, OrderDate, TotalAmount
+FROM Orders
+WHERE OrderDate >= DATE_SUB('2024-04-25', INTERVAL 30 DAY)
+ORDER BY OrderDate DESC;
+
+-- O5: RETRIEVE the highest, lowest, and average order amount using aggregate functions
+SELECT 
+    MAX(TotalAmount) AS HighestOrderAmount,
+    MIN(TotalAmount) AS LowestOrderAmount,
+    AVG(TotalAmount) AS AverageOrderAmount,
+    COUNT(*) AS TotalOrders
+FROM Orders;
+
+-- =====================================================
+-- ORDERDETAILS QUERIES
+-- =====================================================
+
+-- OD1: INSERT sample order details
+INSERT INTO OrderDetails (OrderID, ProductID, Quantity, Subtotal) VALUES
+(1, 1, 1, 1200.00),
+(1, 2, 1, 45.99),
+(2, 3, 5, 79.95),
+(2, 4, 1, 309.50),
+(3, 5, 1, 150.00),
+(3, 6, 5, 449.95),
+(4, 2, 1, 45.00),
+(4, 7, 1, 105.00),
+(5, 1, 1, 1200.00),
+(5, 5, 1, 150.00),
+(5, 2, 5, 227.50),
+(6, 7, 1, 199.99),
+(6, 8, 2, 110.00),
+(7, 4, 2, 700.00),
+(7, 3, 6, 95.88),
+(7, 2, 1, 94.12),
+(8, 1, 1, 1200.00),
+(8, 8, 2, 110.00),
+(8, 7, 1, 140.99),
+(9, 6, 1, 89.99),
+(9, 3, 3, 47.97),
+(9, 2, 2, 91.00),
+(10, 8, 2, 110.00),
+(10, 3, 1, 15.99);
+
+-- OD2: RETRIEVE all order details for a specific order (Example: Order ID 1)
+SELECT OD.OrderDetailID, OD.OrderID, P.Name, OD.Quantity, 
+       P.Price, OD.Subtotal
+FROM OrderDetails OD
+JOIN Products P ON OD.ProductID = P.ProductID
+WHERE OD.OrderID = 1;
+
+-- OD3: CALCULATE total revenue generated from all orders
+SELECT SUM(Subtotal) AS TotalRevenue
+FROM OrderDetails;
+
+-- OD4: RETRIEVE order details for orders placed in last 30 days
+SELECT OD.OrderDetailID, OD.OrderID, O.OrderDate, P.Name, 
+       OD.Quantity, P.Price, OD.Subtotal
+FROM OrderDetails OD
+JOIN Orders O ON OD.OrderID = O.OrderID
+JOIN Products P ON OD.ProductID = P.ProductID
+WHERE O.OrderDate >= DATE_SUB('2024-04-25', INTERVAL 30 DAY)
+ORDER BY O.OrderDate DESC;
+
+-- OD5: COUNT how many times a specific product has been sold (Example: Product ID 1)
+SELECT 
+    P.ProductID, P.Name, 
+    COUNT(OD.OrderDetailID) AS TimesSold,
+    SUM(OD.Quantity) AS TotalUnitsSold,
+    SUM(OD.Subtotal) AS TotalRevenue
+FROM Products P
+LEFT JOIN OrderDetails OD ON P.ProductID = OD.ProductID
+WHERE P.ProductID = 1
+GROUP BY P.ProductID, P.Name;
+
+-- =====================================================
+-- ADVANCED QUERIES
+-- =====================================================
+
+-- A1: Customer with their order history and details
+SELECT C.CustomerID, C.Name, C.Email, O.OrderID, O.OrderDate, 
+       O.TotalAmount, P.Name AS ProductName, OD.Quantity
+FROM Customers C
+LEFT JOIN Orders O ON C.CustomerID = O.CustomerID
+LEFT JOIN OrderDetails OD ON O.OrderID = OD.OrderID
+LEFT JOIN Products P ON OD.ProductID = P.ProductID
+ORDER BY C.CustomerID, O.OrderDate DESC;
+
+-- A2: Top 5 most frequently ordered products
+SELECT P.ProductID, P.Name, COUNT(OD.OrderDetailID) AS TimesPurchased,
+       SUM(OD.Quantity) AS TotalQuantity, SUM(OD.Subtotal) AS Revenue
+FROM Products P
+JOIN OrderDetails OD ON P.ProductID = OD.ProductID
+GROUP BY P.ProductID, P.Name
+ORDER BY TimesPurchased DESC
+LIMIT 5;
+
+-- A3: Customers who have placed orders
+SELECT DISTINCT C.CustomerID, C.Name, C.Email, 
+       COUNT(O.OrderID) AS TotalOrders,
+       SUM(O.TotalAmount) AS TotalSpent
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID, C.Name, C.Email
+ORDER BY TotalSpent DESC;
